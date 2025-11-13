@@ -5,6 +5,12 @@ processes = []
 
 [env]
   FLET_SESSION_TIMEOUT = "60"
+  FLET_UPLOAD_DIR = "/app/storage/temp"
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
 
 [http_service]
   internal_port = 8000
