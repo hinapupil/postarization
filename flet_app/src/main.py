@@ -172,7 +172,7 @@ def main(page: ft.Page):
         icon=ft.Icons.UPLOAD_FILE,
         on_click=lambda _: file_picker_open.pick_files(
             file_type=ft.FilePickerFileType.CUSTOM,
-            allowed_extensions=["jpg", "jpeg", "png", "bmp"],
+            allowed_extensions=["jpg", "jpeg", "png", "bmp", "webp"],
             allow_multiple=False
         )
     )
