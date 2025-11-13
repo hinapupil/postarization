@@ -328,7 +328,6 @@ def main(page: ft.Page):
         print(f"[DEBUG] on_upload_complete called, e={e}")
         
         # アップロード完了後、ファイルが保存されるまで少し待つ
-        import time
         time.sleep(0.5)
         
         # アップロードされたファイルを読み込む
