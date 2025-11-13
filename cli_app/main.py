@@ -5,10 +5,11 @@ from PIL import Image
 
 # パラメータのプリセット（テンプレート）
 PARAMETER_SETS = {
-    "default": {"saturation": 2, "level": 8, "smooth_strength": 50, "edge_strength": 0.4},
-    "realistic": {"saturation": 1.5, "level": 12, "smooth_strength": 70, "edge_strength": 0.3},
-    "anime_style": {"saturation": 2.5, "level": 6, "smooth_strength": 40, "edge_strength": 0.5},
-    "monochrome": {"saturation": 1.2, "level": 4, "smooth_strength": 80, "edge_strength": 0.2},
+    # "default": {"saturation": 2, "level": 8, "smooth_strength": 50, "edge_strength": 0.4},
+    # "realistic": {"saturation": 1.5, "level": 12, "smooth_strength": 70, "edge_strength": 0.3},
+    # "anime_style": {"saturation": 2.5, "level": 6, "smooth_strength": 40, "edge_strength": 0.5},
+    # "monochrome": {"saturation": 1.2, "level": 4, "smooth_strength": 80, "edge_strength": 0.2},
+    "novel_game": {"saturation": 1.6, "level": 8, "smooth_strength": 68, "edge_strength": 0.8},
 }
 
 def convert_to_anime_style(image: Image.Image, saturation=2, level=8, smooth_strength=50, edge_strength=0.4) -> Image.Image:
@@ -86,6 +87,6 @@ if __name__ == "__main__":
                 anime_image = convert_to_anime_style(image, **params)
 
                 # 保存
-                anime_image.save(output_path)
+                anime_image.save(output_path, format="PNG")
 
     print(f"✅ すべての画像を {output_dir} に保存しました！")

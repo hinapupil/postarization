@@ -11,6 +11,7 @@ PARAMETER_SETS = {
     "realistic":  {"saturation": 1.5, "level": 12, "smooth_strength": 70, "edge_strength": 0.3},
     "anime_style":{"saturation": 2.5, "level": 6,  "smooth_strength": 40, "edge_strength": 0.5},
     "monochrome": {"saturation": 0, "level": 4,  "smooth_strength": 80, "edge_strength": 0.2},
+    "novel_game": {"saturation": 1.6, "level": 8, "smooth_strength": 68, "edge_strength": 0.8},
 }
 
 def main(page: ft.Page):
@@ -40,8 +41,8 @@ def main(page: ft.Page):
     # スライダー（初期は無効） + 値表示
     slider_satur = ft.Slider(min=0.0, max=3.0, value=2.0, divisions=30, disabled=True)
     slider_level = ft.Slider(min=2, max=20, value=8, divisions=18, disabled=True)
-    slider_smooth = ft.Slider(min=0, max=100, value=50, divisions=100, disabled=True)
-    slider_edge = ft.Slider(min=0.0, max=1.0, value=0.4, divisions=100, disabled=True)
+    slider_smooth = ft.Slider(min=0, max=200, value=50, divisions=200, disabled=True)
+    slider_edge = ft.Slider(min=0.0, max=2.0, value=0.4, divisions=200, disabled=True)
 
     satur_value_text = ft.Text(value=f"{slider_satur.value:.2f}", width=50)
     level_value_text = ft.Text(value=f"{int(slider_level.value)}", width=50)
@@ -211,9 +212,9 @@ def main(page: ft.Page):
             ft.Row([slider_satur, satur_value_text]),
             ft.Text("level: ポスタリゼーションの色レベル"),
             ft.Row([slider_level, level_value_text]),
-            ft.Text("smooth_strength: 平滑化の強さ (0-100)"),
+            ft.Text("smooth_strength: 平滑化の強さ (0-200)"),
             ft.Row([slider_smooth, smooth_value_text]),
-            ft.Text("edge_strength: エッジ保持の強さ (0.0-1.0)"),
+            ft.Text("edge_strength: エッジ保持の強さ (0.0-2.0)"),
             ft.Row([slider_edge, edge_value_text]),
         ],
         spacing=10,
