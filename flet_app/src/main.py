@@ -157,8 +157,8 @@ def main(page: ft.Page):
                     allowed_extensions=["png", "jpg", "jpeg"]
                 )
             else:
-                # Web版: base64エンコードして直接ダウンロード
-                print(f"[DEBUG] Creating base64 download for web")
+                # Web版: Blob URLを使用してダウンロード（大きな画像でも安全）
+                print(f"[DEBUG] Creating blob download for web")
                 
                 timestamp = int(time.time())
                 filename = f"filtered_image_{timestamp}.png"
@@ -169,7 +169,8 @@ def main(page: ft.Page):
                 buf.seek(0)
                 b64_data = base64.b64encode(buf.getvalue()).decode()
                 
-                # ダウンロード用のHTMLページを作成
+                # Blob URLを使用したダウンロード用のHTMLページを作成
+                # Blob URLはdata URLの2MB制限を回避し、大きな画像でも安全
                 download_html = f"""<!DOCTYPE html>
                 <html>
                 <head><title>Download</title></head>
@@ -177,13 +178,37 @@ def main(page: ft.Page):
                 <p>Downloading...</p>
                 <script>
                 window.onload = function() {{
-                    const link = document.createElement('a');
-                    link.download = '{filename}';
-                    link.href = 'data:image/png;base64,{b64_data}';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    setTimeout(function() {{ window.close(); }}, 100);
+                    try {{
+                        // base64をバイナリデータに変換
+                        const base64Data = '{b64_data}';
+                        const binaryString = atob(base64Data);
+                        const len = binaryString.length;
+                        const bytes = new Uint8Array(len);
+                        for (let i = 0; i < len; i++) {{
+                            bytes[i] = binaryString.charCodeAt(i);
+                        }}
+                        
+                        // BlobとBlob URLを作成
+                        const blob = new Blob([bytes], {{ type: 'image/png' }});
+                        const blobUrl = URL.createObjectURL(blob);
+                        
+                        // ダウンロードリンクを作成してクリック
+                        const link = document.createElement('a');
+                        link.download = '{filename}';
+                        link.href = blobUrl;
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                        
+                        // Blob URLを解放してメモリリーク防止
+                        setTimeout(function() {{
+                            URL.revokeObjectURL(blobUrl);
+                            window.close();
+                        }}, 100);
+                    }} catch (e) {{
+                        console.error('Download failed:', e);
+                        document.body.innerHTML = '<p>Download failed. Please try again.</p>';
+                    }}
                 }};
                 </script>
                 </body>
