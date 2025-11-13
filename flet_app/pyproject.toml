@@ -8,7 +8,7 @@ authors = [
     { name = "Postarization Filter Developer", email = "developer@example.com" }
 ]
 dependencies = [
-  "flet==0.27.6",
+  "flet==0.28.3",
   "Pillow>=10.0.0",
   "opencv-python>=4.8.0"
 ]
@@ -33,11 +33,11 @@ path = "src"
 
 [tool.uv]
 dev-dependencies = [
-    "flet[all]==0.27.6",
+    "flet[all]==0.28.3",
 ]
 
 [tool.poetry]
 package-mode = false
 
 [tool.poetry.group.dev.dependencies]
-flet = {extras = ["all"], version = "0.27.6"}
+flet = {extras = ["all"], version = "0.28.3"}
