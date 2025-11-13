@@ -8,6 +8,7 @@ import os
 import gc
 import time
 import urllib.parse
+import traceback
 
 # 切り詰められた画像ファイルを読み込めるようにする
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -138,7 +139,6 @@ def main(page: ft.Page):
             print(f"[SUCCESS] Image saved successfully to {save_path}")
         except Exception as ex:
             print(f"[ERROR] 画像の保存に失敗しました: {ex}")
-            import traceback
             traceback.print_exc()
 
     def on_export_click(e):
@@ -196,7 +196,6 @@ def main(page: ft.Page):
 
         except Exception as ex:
             print(f"[ERROR] エクスポートに失敗しました: {ex}")
-            import traceback
             traceback.print_exc()
 
     export_button = ft.ElevatedButton(
@@ -308,7 +307,6 @@ def main(page: ft.Page):
                     page.update()
                 except Exception as ex:
                     print(f"[ERROR] 画像の読み込みに失敗しました: {ex}")
-                    import traceback
                     traceback.print_exc()
             else:
                 # Web版: アップロードを開始
@@ -389,7 +387,6 @@ def main(page: ft.Page):
             page.update()
         except Exception as ex:
             print(f"[ERROR] 画像の読み込みに失敗しました: {ex}")
-            import traceback
             traceback.print_exc()
 
     file_picker_open = ft.FilePicker(
