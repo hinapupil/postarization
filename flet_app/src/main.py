@@ -354,6 +354,13 @@ def main(page: ft.Page):
         # ファイルが完全に書き込まれるまで追加で待つ
         time.sleep(0.5)
         
+        # ファイルタイプの検証
+        allowed_extensions = {'.jpg', '.jpeg', '.png', '.bmp'}
+        file_ext = os.path.splitext(file_name)[1].lower()
+        if file_ext not in allowed_extensions:
+            print(f"[ERROR] Invalid file type: {file_ext}")
+            return
+        
         try:
             print(f"[DEBUG] File found, opening: {file_path}")
             img = Image.open(file_path)
