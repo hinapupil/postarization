@@ -1,11 +1,11 @@
 [project]
-name = "postarization-filter"
+name = "postarization"
 version = "1.0.0"
 description = "Anime-style image conversion filter application"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [
-    { name = "Postarization Filter Developer", email = "developer@example.com" }
+    { name = "hinapupil", email = "hinapupil@gmail.com" }
 ]
 dependencies = [
   "flet==0.28.3",
