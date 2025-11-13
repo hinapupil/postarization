@@ -1,52 +1,62 @@
-# FletApp app
+# Postarization Filter
 
-## Run the app
+画像をアニメ風に変換するGUIアプリケーションです。インタラクティブにパラメータを調整しながらリアルタイムでプレビューできます。
 
-### uv
+## 機能
 
-Run as a desktop app:
+- 画像のインポート（ローカルファイル選択）
+- リアルタイムプレビュー
+- 5種類のパラメータテンプレート（default, realistic, anime_style, monochrome, novel_game）
+- 4つの調整可能なパラメータ:
+  - 彩度 (Saturation)
+  - 色レベル (Level)
+  - 平滑化の強さ (Smooth Strength)
+  - エッジ強度 (Edge Strength)
+- PNG形式でのエクスポート
 
-```
-uv run flet run
-```
+## 必要な環境
 
-Run as a web app:
+- Python 3.9以上
+- 依存ライブラリ: Flet, Pillow, OpenCV
 
-```
-uv run flet run --web
-```
+## 開発環境でのアプリ実行
 
-### Poetry
+### デスクトップアプリとして実行
 
-Install dependencies from `pyproject.toml`:
-
-```
-poetry install
-```
-
-Run as a desktop app:
-
-```
-poetry run flet run
+```bash
+flet run --module-name src/main.py
 ```
 
-Run as a web app:
+### Web版として実行
 
-```
-poetry run flet run --web
-```
-
-For more details on running the app, refer to the [Getting Started Guide](https://flet.dev/docs/getting-started/).
-
-## Build the app
-
-### Android
-
-```
-flet build apk -v
+```bash
+flet run --web --module-name src/main.py
 ```
 
-For more details on building and signing `.apk` or `.aab`, refer to the [Android Packaging Guide](https://flet.dev/docs/publish/android/).
+## リリースビルド
+
+### Windows向け実行可能ファイルのビルド
+
+```bash
+flet build windows --module-name src/main.py
+```
+
+ビルド完了後、`build/windows`ディレクトリに実行可能ファイルが生成されます。
+
+### その他のプラットフォーム
+
+```bash
+# macOS
+flet build macos --module-name src/main.py
+
+# Linux
+flet build linux --module-name src/main.py
+
+# Webアプリ
+flet build web --module-name src/main.py
+```
+
+詳細は[Fletビルドガイド](https://flet.dev/docs/publish/)を参照してください。
 
 ### iOS
 
