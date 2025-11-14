@@ -63,7 +63,7 @@ def main(page: ft.Page):
     # page.window_maximized = True
     # page.window_full_screen = True
     page.title = "Postarization Filter"
-    page.scroll = "auto"
+    page.scroll = ft.ScrollMode.AUTO
     page.padding = 10
 
     # Web版の場合、起動時に古いファイルをクリーンアップ
@@ -236,9 +236,9 @@ def main(page: ft.Page):
         print(f"[DEBUG] Starting postarization...")
         current_image = postarization(
             original_image,
-            saturation=sat_val,
+            saturation=int(sat_val),
             level=lev_val,
-            smooth_strength=smt_val,
+            smooth_strength=int(smt_val),
             edge_strength=edg_val
         )
         print(f"[DEBUG] Postarization complete, image size: {current_image.size}")
@@ -406,7 +406,7 @@ def main(page: ft.Page):
                     )
                 file_picker_open.upload(upload_list)
 
-    def on_upload_complete(e: ft.FilePickerResultEvent):
+    def on_upload_complete(e: ft.FilePickerUploadEvent):
         nonlocal original_image, current_image
         print(f"[DEBUG] on_upload_complete called, e={e}")
         
@@ -508,15 +508,22 @@ def main(page: ft.Page):
     file_picker_save = ft.FilePicker(
         on_result=on_save_dialog_result
     )
+    
+    # ページにfile_pickerを追加（これが重要）
+    page.overlay.append(file_picker_open)
+    page.overlay.append(file_picker_save)
+    
     def on_import_click(e):
         print(f"[DEBUG] Import button clicked")
+        print(f"[DEBUG] page.web={page.web}")
+        print(f"[DEBUG] file_picker_open={file_picker_open}")
         try:
             file_picker_open.pick_files(
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["jpg", "jpeg", "png", "webp"],
                 allow_multiple=False
             )
-            print(f"[DEBUG] pick_files called")
+            print(f"[DEBUG] pick_files called successfully")
         except Exception as ex:
             print(f"[ERROR] Failed to open file picker: {ex}")
             traceback.print_exc()
@@ -565,36 +572,47 @@ def main(page: ft.Page):
     # 右側のコントロールパネル
     control_panel = ft.Column(
         controls=[
-            # パラメータセクション
-            ft.Text("Parameters", size=16, weight=ft.FontWeight.BOLD),
-            ft.Text("saturation: 彩度の倍率 (0.0-3.0)", size=12),
-            ft.Row([satur_minus, slider_satur, satur_plus, satur_value_field], expand=True),
-            ft.Text("level: ポスタリゼーションの色レベル (2-20)", size=12),
-            ft.Row([level_minus, slider_level, level_plus, level_value_field], expand=True),
-            ft.Text("smooth_strength: 平滑化の強さ (0-1000)", size=12),
-            ft.Row([smooth_minus, slider_smooth, smooth_plus, smooth_value_field], expand=True),
-            ft.Text("edge_strength: エッジ保持の強さ (0.0-10.0)", size=12),
-            ft.Row([edge_minus, slider_edge, edge_plus, edge_value_field], expand=True),
-            
-            ft.Divider(),
-            
-            # テンプレートセクション
-            ft.Text("Templates", size=16, weight=ft.FontWeight.BOLD),
-            template_buttons,
-            
-            ft.Divider(),
-            
-            # アクションボタンセクション
-            ft.Text("Actions", size=16, weight=ft.FontWeight.BOLD),
-            ft.Row(
+            # パラメータセクション（折りたたみ可能）
+            ft.ExpansionTile(
+                title=ft.Text("Parameters", size=16, weight=ft.FontWeight.BOLD),
+                initially_expanded=True,
+                controls_padding=ft.padding.only(left=10, right=10, bottom=10),
                 controls=[
-                    import_button,
-                    export_button,
+                    ft.Text("saturation: 彩度の倍率 (0.0-3.0)", size=12),
+                    ft.Row([satur_minus, slider_satur, satur_plus, satur_value_field], expand=True),
+                    ft.Text("level: ポスタリゼーションの色レベル (2-20)", size=12),
+                    ft.Row([level_minus, slider_level, level_plus, level_value_field], expand=True),
+                    ft.Text("smooth_strength: 平滑化の強さ (0-1000)", size=12),
+                    ft.Row([smooth_minus, slider_smooth, smooth_plus, smooth_value_field], expand=True),
+                    ft.Text("edge_strength: エッジ保持の強さ (0.0-10.0)", size=12),
+                    ft.Row([edge_minus, slider_edge, edge_plus, edge_value_field], expand=True),
                 ],
-                spacing=5,
+            ),
+            # テンプレートセクション（折りたたみ可能）
+            ft.ExpansionTile(
+                title=ft.Text("Templates", size=16, weight=ft.FontWeight.BOLD),
+                initially_expanded=True,
+                controls_padding=ft.padding.only(left=10, right=10, bottom=10),
+                controls=[
+                    template_buttons,
+                ],
+            ),
+            # アクションボタンセクション
+            ft.Container(
+                content=ft.Column([
+                    ft.Text("Actions", size=16, weight=ft.FontWeight.BOLD),
+                    ft.Row(
+                        controls=[
+                            import_button,
+                            export_button,
+                        ],
+                        spacing=5,
+                    ),
+                ]),
+                padding=ft.padding.only(top=10),
             ),
         ],
-        spacing=10,
+        spacing=0,
         scroll=ft.ScrollMode.AUTO,
     )
 
@@ -616,9 +634,6 @@ def main(page: ft.Page):
         ],
         vertical_alignment=ft.CrossAxisAlignment.START,
     )
-
-    page.overlay.append(file_picker_open)
-    page.overlay.append(file_picker_save)
 
     # ページに追加
     page.add(
