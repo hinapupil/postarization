@@ -8,7 +8,7 @@ processes = []
   FLET_UPLOAD_DIR = "/app/storage/temp"
 
 [[vm]]
-  memory = '512mb'
+  memory = '1024mb'
   cpu_kind = 'shared'
   cpus = 1
 
