@@ -59,8 +59,8 @@ NSCameraUsageDescription = "This app needs camera access to take photos for proc
 # team_id = "YOUR_TEAM_ID"
 # export_options = { uploadSymbols = true }
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "flet[all]==0.28.3",
 ]
 

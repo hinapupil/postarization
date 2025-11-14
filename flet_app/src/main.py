@@ -508,14 +508,23 @@ def main(page: ft.Page):
     file_picker_save = ft.FilePicker(
         on_result=on_save_dialog_result
     )
+    def on_import_click(e):
+        print(f"[DEBUG] Import button clicked")
+        try:
+            file_picker_open.pick_files(
+                file_type=ft.FilePickerFileType.CUSTOM,
+                allowed_extensions=["jpg", "jpeg", "png", "bmp"],
+                allow_multiple=False
+            )
+            print(f"[DEBUG] pick_files called")
+        except Exception as ex:
+            print(f"[ERROR] Failed to open file picker: {ex}")
+            traceback.print_exc()
+    
     import_button = ft.ElevatedButton(
         text="Import",
         icon=ft.Icons.UPLOAD_FILE,
-        on_click=lambda _: file_picker_open.pick_files(
-            file_type=ft.FilePickerFileType.CUSTOM,
-            allowed_extensions=["jpg", "jpeg", "png", "bmp"],
-            allow_multiple=False
-        )
+        on_click=on_import_click
     )
 
     # ---- テンプレートボタンの実装 ----
@@ -542,14 +551,15 @@ def main(page: ft.Page):
     edge_minus, edge_plus = create_slider_controls(slider_edge, 0.0, 10.0, 1000, 0.01)
     
     # テンプレートボタン
-    template_buttons = ft.Column(
+    template_buttons = ft.Row(
         controls=[
-            ft.ElevatedButton("Default", on_click=lambda e: apply_template("default"), expand=True),
-            ft.ElevatedButton("Realistic", on_click=lambda e: apply_template("realistic"), expand=True),
-            ft.ElevatedButton("Anime", on_click=lambda e: apply_template("anime_style"), expand=True),
-            ft.ElevatedButton("Monochrome", on_click=lambda e: apply_template("monochrome"), expand=True),
+            ft.ElevatedButton("Default", on_click=lambda e: apply_template("default")),
+            ft.ElevatedButton("Realistic", on_click=lambda e: apply_template("realistic")),
+            ft.ElevatedButton("Anime", on_click=lambda e: apply_template("anime_style")),
+            ft.ElevatedButton("Monochrome", on_click=lambda e: apply_template("monochrome")),
         ],
         spacing=5,
+        wrap=True,
     )
 
     # 右側のコントロールパネル
@@ -576,8 +586,13 @@ def main(page: ft.Page):
             
             # アクションボタンセクション
             ft.Text("Actions", size=16, weight=ft.FontWeight.BOLD),
-            import_button,
-            export_button,
+            ft.Row(
+                controls=[
+                    import_button,
+                    export_button,
+                ],
+                spacing=5,
+            ),
         ],
         spacing=10,
         scroll=ft.ScrollMode.AUTO,
