@@ -513,7 +513,7 @@ def main(page: ft.Page):
         try:
             file_picker_open.pick_files(
                 file_type=ft.FilePickerFileType.CUSTOM,
-                allowed_extensions=["jpg", "jpeg", "png", "bmp"],
+                allowed_extensions=["jpg", "jpeg", "png", "webp"],
                 allow_multiple=False
             )
             print(f"[DEBUG] pick_files called")
