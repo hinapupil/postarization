@@ -534,29 +534,6 @@ def main(page: ft.Page):
         # スライダー値を変更したので、すぐに更新処理を走らせる
         update_image_preview()
 
-    # テンプレートボタンのレイアウト（レスポンシブ対応）
-    template_buttons = ft.ResponsiveRow(
-        controls=[
-            ft.Container(
-                content=ft.ElevatedButton("default", on_click=lambda e: apply_template("default")),
-                col={"xs": 6, "sm": 3, "md": 3}
-            ),
-            ft.Container(
-                content=ft.ElevatedButton("realistic", on_click=lambda e: apply_template("realistic")),
-                col={"xs": 6, "sm": 3, "md": 3}
-            ),
-            ft.Container(
-                content=ft.ElevatedButton("anime", on_click=lambda e: apply_template("anime_style")),
-                col={"xs": 6, "sm": 3, "md": 3}
-            ),
-            ft.Container(
-                content=ft.ElevatedButton("monochro", on_click=lambda e: apply_template("monochrome")),
-                col={"xs": 6, "sm": 3, "md": 3}
-            ),
-        ],
-        alignment=ft.MainAxisAlignment.CENTER,
-    )
-
     # ---- レイアウト構築 ----
     # 増減ボタンの作成
     satur_minus, satur_plus = create_slider_controls(slider_satur, 0.0, 3.0, 30, 0.1)
@@ -564,9 +541,22 @@ def main(page: ft.Page):
     smooth_minus, smooth_plus = create_slider_controls(slider_smooth, 0, 1000, 1000, 1)
     edge_minus, edge_plus = create_slider_controls(slider_edge, 0.0, 10.0, 1000, 0.01)
     
-    # パラメータパネル（折りたたみ可能）
-    param_panel_content = ft.Column(
+    # テンプレートボタン
+    template_buttons = ft.Column(
         controls=[
+            ft.ElevatedButton("Default", on_click=lambda e: apply_template("default"), expand=True),
+            ft.ElevatedButton("Realistic", on_click=lambda e: apply_template("realistic"), expand=True),
+            ft.ElevatedButton("Anime", on_click=lambda e: apply_template("anime_style"), expand=True),
+            ft.ElevatedButton("Monochrome", on_click=lambda e: apply_template("monochrome"), expand=True),
+        ],
+        spacing=5,
+    )
+
+    # 右側のコントロールパネル
+    control_panel = ft.Column(
+        controls=[
+            # パラメータセクション
+            ft.Text("Parameters", size=16, weight=ft.FontWeight.BOLD),
             ft.Text("saturation: 彩度の倍率 (0.0-3.0)", size=12),
             ft.Row([satur_minus, slider_satur, satur_plus, satur_value_field], expand=True),
             ft.Text("level: ポスタリゼーションの色レベル (2-20)", size=12),
@@ -575,16 +565,22 @@ def main(page: ft.Page):
             ft.Row([smooth_minus, slider_smooth, smooth_plus, smooth_value_field], expand=True),
             ft.Text("edge_strength: エッジ保持の強さ (0.0-10.0)", size=12),
             ft.Row([edge_minus, slider_edge, edge_plus, edge_value_field], expand=True),
+            
+            ft.Divider(),
+            
+            # テンプレートセクション
+            ft.Text("Templates", size=16, weight=ft.FontWeight.BOLD),
+            template_buttons,
+            
+            ft.Divider(),
+            
+            # アクションボタンセクション
+            ft.Text("Actions", size=16, weight=ft.FontWeight.BOLD),
+            import_button,
+            export_button,
         ],
         spacing=10,
-    )
-
-    # 折りたたみ可能なパラメータパネル
-    param_expansion = ft.ExpansionTile(
-        title=ft.Text("Parameters"),
-        subtitle=ft.Text("Adjust filter parameters"),
-        initially_expanded=True,
-        controls=[param_panel_content]
+        scroll=ft.ScrollMode.AUTO,
     )
 
     # レスポンシブレイアウト
@@ -596,31 +592,14 @@ def main(page: ft.Page):
                 col={"xs": 12, "sm": 12, "md": 8, "lg": 9},
                 padding=5,
             ),
-            # パラメータパネル
+            # 右側のコントロールパネル
             ft.Container(
-                content=param_expansion,
+                content=control_panel,
                 col={"xs": 12, "sm": 12, "md": 4, "lg": 3},
                 padding=5,
             ),
         ],
         vertical_alignment=ft.CrossAxisAlignment.START,
-    )
-
-    # 下部のボタンエリア
-    bottom_area = ft.ResponsiveRow(
-        controls=[
-            ft.Container(
-                content=import_button,
-                col={"xs": 12, "sm": 6, "md": 4},
-                alignment=ft.alignment.center
-            ),
-            ft.Container(
-                content=export_button,
-                col={"xs": 12, "sm": 6, "md": 4},
-                alignment=ft.alignment.center
-            ),
-        ],
-        alignment=ft.MainAxisAlignment.CENTER,
     )
 
     page.overlay.append(file_picker_open)
@@ -632,11 +611,6 @@ def main(page: ft.Page):
             controls=[
                 ft.Text("Postarization Filter", size=24, weight=ft.FontWeight.BOLD),
                 main_content,
-                ft.Divider(),
-                ft.Text("Templates", size=16, weight=ft.FontWeight.BOLD),
-                template_buttons,
-                ft.Divider(),
-                bottom_area,
             ],
             spacing=15,
             expand=True
