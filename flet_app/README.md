@@ -5,6 +5,7 @@
 ## 機能
 
 - 画像のインポート（ローカルファイル選択）
+  - 対応形式: JPEG, PNG, WebP
 - リアルタイムプレビュー
 - 5種類のパラメータテンプレート（default, realistic, anime_style, monochrome, novel_game）
 - 4つの調整可能なパラメータ:
@@ -18,6 +19,8 @@
 
 - Python 3.9以上
 - 依存ライブラリ: Flet, Pillow, OpenCV
+
+**注意:** WebP形式の画像を使用する場合、Pillowがlibwebpサポート付きでインストールされている必要があります。通常、pipでインストールされるPillowには含まれていますが、環境によってはlibwebpが不足している場合があります。
 
 ## 開発環境でのアプリ実行
 
