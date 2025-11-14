@@ -509,29 +509,14 @@ def main(page: ft.Page):
         on_result=on_save_dialog_result
     )
     
-    # ページにfile_pickerを追加（これが重要）
-    page.overlay.append(file_picker_open)
-    page.overlay.append(file_picker_save)
-    
-    def on_import_click(e):
-        print(f"[DEBUG] Import button clicked")
-        print(f"[DEBUG] page.web={page.web}")
-        print(f"[DEBUG] file_picker_open={file_picker_open}")
-        try:
-            file_picker_open.pick_files(
-                file_type=ft.FilePickerFileType.CUSTOM,
-                allowed_extensions=["jpg", "jpeg", "png", "webp"],
-                allow_multiple=False
-            )
-            print(f"[DEBUG] pick_files called successfully")
-        except Exception as ex:
-            print(f"[ERROR] Failed to open file picker: {ex}")
-            traceback.print_exc()
-    
     import_button = ft.ElevatedButton(
         text="Import",
         icon=ft.Icons.UPLOAD_FILE,
-        on_click=on_import_click
+        on_click=lambda _: file_picker_open.pick_files(
+            file_type=ft.FilePickerFileType.CUSTOM,
+            allowed_extensions=["jpg", "jpeg", "png", "webp"],
+            allow_multiple=False
+        )
     )
 
     # ---- テンプレートボタンの実装 ----
@@ -597,19 +582,21 @@ def main(page: ft.Page):
                     template_buttons,
                 ],
             ),
-            # アクションボタンセクション
-            ft.Container(
-                content=ft.Column([
-                    ft.Text("Actions", size=16, weight=ft.FontWeight.BOLD),
+            # アクションセクション（折りたたみ可能）
+            ft.ExpansionTile(
+                title=ft.Text("Actions", size=16, weight=ft.FontWeight.BOLD),
+                initially_expanded=True,
+                controls_padding=ft.padding.only(left=10, right=10, bottom=10),
+                controls=[
                     ft.Row(
                         controls=[
                             import_button,
                             export_button,
                         ],
                         spacing=5,
+                        alignment=ft.MainAxisAlignment.CENTER,
                     ),
-                ]),
-                padding=ft.padding.only(top=10),
+                ],
             ),
         ],
         spacing=0,
@@ -634,6 +621,9 @@ def main(page: ft.Page):
         ],
         vertical_alignment=ft.CrossAxisAlignment.START,
     )
+
+    page.overlay.append(file_picker_open)
+    page.overlay.append(file_picker_save)
 
     # ページに追加
     page.add(
