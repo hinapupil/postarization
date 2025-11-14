@@ -121,7 +121,7 @@ def main(page: ft.Page):
             print(f"[DEBUG] Path type: {type(save_path)}")
             
             # 拡張子がない場合は.pngを追加
-            if not save_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+            if not save_path.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
                 save_path += '.png'
             
             print(f"[DEBUG] Final save path: {save_path}")
@@ -154,7 +154,7 @@ def main(page: ft.Page):
                 file_picker_save.save_file(
                     dialog_title="Save Filtered Image",
                     file_name="filtered_image.png",
-                    allowed_extensions=["png", "jpg", "jpeg"]
+                    allowed_extensions=["png", "jpg", "jpeg", ".webp"]
                 )
             else:
                 # Web版: base64エンコードして直接ダウンロード
@@ -353,7 +353,7 @@ def main(page: ft.Page):
         time.sleep(0.5)
         
         # ファイルタイプの検証
-        allowed_extensions = {'.jpg', '.jpeg', '.png', '.bmp'}
+        allowed_extensions = {'.jpg', '.jpeg', '.png', '.webp'}
         file_ext = os.path.splitext(file_name)[1].lower()
         if file_ext not in allowed_extensions:
             print(f"[ERROR] Invalid file type: {file_ext}")
