@@ -1,6 +1,6 @@
 [project]
 name = "postarization"
-version = "1.0.0"
+version = "1.1.0"
 description = "Anime-style image conversion filter application"
 readme = "README.md"
 requires-python = ">=3.9"
@@ -32,8 +32,35 @@ copyright = "Copyright (C) 2025 Kemuri Kobo"
 [tool.flet.app]
 path = "src"
 
-[tool.uv]
-dev-dependencies = [
+# iOS specific settings
+[tool.flet.ios]
+# Bundle ID for iOS app (org.project_name format)
+bundle_id = "com.kemuri.postarization"
+
+# iOS permissions - customize as needed
+[tool.flet.ios.info]
+NSPhotoLibraryUsageDescription = "This app needs access to your photo library to load and save images."
+NSPhotoLibraryAddUsageDescription = "This app needs permission to save processed images to your photo library."
+NSCameraUsageDescription = "This app needs camera access to take photos for processing."
+
+# iOS signing configuration examples (uncomment and fill in your actual values)
+# [tool.flet.ios.export_methods."debugging"]
+# provisioning_profile = "Postarization Development"
+# signing_certificate = "Apple Development"
+
+# [tool.flet.ios.export_methods."release-testing"]
+# provisioning_profile = "Postarization AdHoc"
+# signing_certificate = "Apple Distribution"
+# team_id = "YOUR_TEAM_ID"
+
+# [tool.flet.ios.export_methods."app-store-connect"]
+# provisioning_profile = "Postarization AppStore"
+# signing_certificate = "Apple Distribution"
+# team_id = "YOUR_TEAM_ID"
+# export_options = { uploadSymbols = true }
+
+[dependency-groups]
+dev = [
     "flet[all]==0.28.3",
 ]
 

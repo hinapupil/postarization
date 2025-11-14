@@ -7,7 +7,6 @@ import threading
 import os
 import gc
 import time
-import urllib.parse
 import traceback
 
 # 切り詰められた画像ファイルを読み込めるようにする
@@ -65,6 +64,7 @@ def main(page: ft.Page):
     # page.window_full_screen = True
     page.title = "Postarization Filter"
     page.scroll = "auto"
+    page.padding = 10
 
     # Web版の場合、起動時に古いファイルをクリーンアップ
     if page.web:
@@ -78,27 +78,35 @@ def main(page: ft.Page):
     # ローディング（プログレスリング）
     loading_indicator = ft.ProgressRing(visible=False, width=50, height=50, color=ft.Colors.BLUE)
 
-    # 画像プレビュー用コントロール
-    image_control = ft.Image(width=1400, fit=ft.ImageFit.CONTAIN)
+    # 画像プレビュー用コントロール（レスポンシブサイズ）
+    image_control = ft.Image(fit=ft.ImageFit.CONTAIN, expand=True)
 
     # Stack でプレビュー画像とローディングを重ねる
     image_stack = ft.Stack(
         controls=[
             image_control,
             ft.Container(content=loading_indicator, alignment=ft.alignment.center)
-        ]
+        ],
+        expand=True
     )
 
     # スライダー（初期は無効） + 値表示
-    slider_satur = ft.Slider(min=0.0, max=3.0, value=2.0, divisions=30, disabled=True)
-    slider_level = ft.Slider(min=2, max=20, value=8, divisions=18, disabled=True)
-    slider_smooth = ft.Slider(min=0, max=200, value=50, divisions=200, disabled=True)
-    slider_edge = ft.Slider(min=0.0, max=2.0, value=0.4, divisions=200, disabled=True)
+    slider_satur = ft.Slider(min=0.0, max=5.0, value=2.0, divisions=500, disabled=True, expand=True)
+    slider_level = ft.Slider(min=2, max=20, value=8, divisions=18, disabled=True, expand=True)
+    slider_smooth = ft.Slider(min=0, max=400, value=50, divisions=500, disabled=True, expand=True)
+    slider_edge = ft.Slider(min=0.0, max=3.0, value=0.4, divisions=300, disabled=True, expand=True)
 
-    satur_value_text = ft.Text(value=f"{slider_satur.value:.2f}", width=50)
-    level_value_text = ft.Text(value=f"{int(slider_level.value)}", width=50)
-    smooth_value_text = ft.Text(value=f"{slider_smooth.value}", width=50)
-    edge_value_text = ft.Text(value=f"{slider_edge.value:.2f}", width=50)
+    # 数値入力用のTextField
+    satur_value_field = ft.TextField(value=f"{slider_satur.value:.2f}", width=80, height=40, text_align=ft.TextAlign.CENTER, disabled=True)
+    level_value_field = ft.TextField(value=f"{int(slider_level.value)}", width=80, height=40, text_align=ft.TextAlign.CENTER, disabled=True)
+    smooth_value_field = ft.TextField(value=f"{slider_smooth.value:.0f}", width=80, height=40, text_align=ft.TextAlign.CENTER, disabled=True)
+    edge_value_field = ft.TextField(value=f"{slider_edge.value:.2f}", width=80, height=40, text_align=ft.TextAlign.CENTER, disabled=True)
+
+    # 増減ボタン作成（step = (max - min) / divisions）
+    satur_minus, satur_plus = None, None
+    level_minus, level_plus = None, None
+    smooth_minus, smooth_plus = None, None
+    edge_minus, edge_plus = None, None
 
     # スライダー値をBase64エンコード用に画像変換する関数
     def pil_to_base64(img: Image.Image, fmt="JPEG") -> str:
@@ -121,7 +129,7 @@ def main(page: ft.Page):
             print(f"[DEBUG] Path type: {type(save_path)}")
             
             # 拡張子がない場合は.pngを追加
-            if not save_path.lower().endswith(('.png', '.jpg', '.jpeg')):
+            if not save_path.lower().endswith(('.png', '.jpg', '.jpeg', '.webp')):
                 save_path += '.png'
             
             print(f"[DEBUG] Final save path: {save_path}")
@@ -147,21 +155,28 @@ def main(page: ft.Page):
             print(f"[ERROR] No image to export")
             return
         
+        # 現在のパラメータ値を取得
+        sat_val = slider_satur.value
+        lev_val = int(slider_level.value)
+        smt_val = int(slider_smooth.value)
+        edg_val = slider_edge.value
+        timestamp = int(time.time())
+        
+        # ファイル名を生成
+        default_filename = f"filtered_image_{sat_val:.2f}_{lev_val}_{smt_val}_{edg_val:.2f}_{timestamp}.png"
+        
         try:
             # デスクトップ版: ファイル保存ダイアログを使用
             if not page.web:
                 print(f"[DEBUG] Using file save dialog for desktop")
                 file_picker_save.save_file(
                     dialog_title="Save Filtered Image",
-                    file_name="filtered_image.png",
-                    allowed_extensions=["png", "jpg", "jpeg"]
+                    file_name=default_filename,
+                    allowed_extensions=["png", "jpg", "jpeg", ".webp"]
                 )
             else:
-                # Web版: base64エンコードして直接ダウンロード
-                print(f"[DEBUG] Creating base64 download for web")
-                
-                timestamp = int(time.time())
-                filename = f"filtered_image_{timestamp}.png"
+                # Web版: 画像をbase64エンコードして新しいタブで表示（右クリック保存用）
+                print(f"[DEBUG] Creating image for web export")
                 
                 # 画像をbase64エンコード
                 buf = BytesIO()
@@ -169,30 +184,12 @@ def main(page: ft.Page):
                 buf.seek(0)
                 b64_data = base64.b64encode(buf.getvalue()).decode()
                 
-                # ダウンロード用のHTMLページを作成
-                download_html = f"""<!DOCTYPE html>
-                <html>
-                <head><title>Download</title></head>
-                <body>
-                <p>Downloading...</p>
-                <script>
-                window.onload = function() {{
-                    const link = document.createElement('a');
-                    link.download = '{filename}';
-                    link.href = 'data:image/png;base64,{b64_data}';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    setTimeout(function() {{ window.close(); }}, 100);
-                }};
-                </script>
-                </body>
-                </html>
-                """
-                
-                # HTMLページを新しいウィンドウで開く
-                page.launch_url(f"data:text/html;charset=utf-8,{urllib.parse.quote(download_html)}", web_window_name="_blank")
-                print(f"[DEBUG] Download initiated: {filename}")
+                # data URLとして画像を直接開く
+                data_url = f"data:image/png;base64,{b64_data}"
+                page.launch_url(data_url, web_window_name="_blank")
+                print(f"[DEBUG] Image opened in new tab")
+                print(f"[INFO] Right-click on the image and select 'Save image as...' to download")
+
 
         except Exception as ex:
             print(f"[ERROR] エクスポートに失敗しました: {ex}")
@@ -225,15 +222,15 @@ def main(page: ft.Page):
 
         print(f"[DEBUG] Parameters: sat={sat_val}, lev={lev_val}, smt={smt_val}, edg={edg_val}")
 
-        # スライダーの値をテキストに反映
-        satur_value_text.value = f"{sat_val:.2f}"
-        level_value_text.value = f"{lev_val}"
-        smooth_value_text.value = f"{smt_val}"
-        edge_value_text.value = f"{edg_val:.2f}"
-        satur_value_text.update()
-        level_value_text.update()
-        smooth_value_text.update()
-        edge_value_text.update()
+        # スライダーの値をTextFieldに反映
+        satur_value_field.value = f"{sat_val:.2f}"
+        level_value_field.value = f"{lev_val}"
+        smooth_value_field.value = f"{smt_val:.0f}"
+        edge_value_field.value = f"{edg_val:.2f}"
+        satur_value_field.update()
+        level_value_field.update()
+        smooth_value_field.update()
+        edge_value_field.update()
 
         # 画像処理
         print(f"[DEBUG] Starting postarization...")
@@ -266,6 +263,74 @@ def main(page: ft.Page):
         update_timer = threading.Timer(0.3, update_image_preview)
         update_timer.start()
 
+    # TextFieldから値を設定する関数
+    def on_value_field_submit(slider, field, min_val, max_val, is_int=False):
+        def handler(e):
+            try:
+                if is_int:
+                    value = int(field.value)
+                else:
+                    value = float(field.value)
+                
+                # 範囲チェック
+                value = max(min_val, min(max_val, value))
+                slider.value = value
+                field.value = f"{int(value)}" if is_int else f"{value:.2f}"
+                slider.update()
+                field.update()
+                on_slider_change(None)
+            except ValueError:
+                # 不正な入力の場合は元の値に戻す
+                field.value = f"{int(slider.value)}" if is_int else f"{slider.value:.2f}"
+                field.update()
+        return handler
+
+    # 各TextFieldにハンドラーを設定（on_submitとon_blurの両方に設定）
+    satur_handler = on_value_field_submit(slider_satur, satur_value_field, 0.0, 3.0)
+    level_handler = on_value_field_submit(slider_level, level_value_field, 2, 20, is_int=True)
+    smooth_handler = on_value_field_submit(slider_smooth, smooth_value_field, 0, 1000)
+    edge_handler = on_value_field_submit(slider_edge, edge_value_field, 0.0, 10.0)
+    
+    # Enterキー押下時とフォーカスが外れた時の両方で反映
+    satur_value_field.on_submit = satur_handler
+    satur_value_field.on_blur = satur_handler
+    level_value_field.on_submit = level_handler
+    level_value_field.on_blur = level_handler
+    smooth_value_field.on_submit = smooth_handler
+    smooth_value_field.on_blur = smooth_handler
+    edge_value_field.on_submit = edge_handler
+    edge_value_field.on_blur = edge_handler
+
+    # スライダー用の増減ボタン関数
+    def create_slider_controls(slider, min_val, max_val, divisions, step):
+        """スライダーと増減ボタンのセットを作成"""
+        def decrement(e):
+            if slider.value > min_val:
+                slider.value = max(min_val, slider.value - step)
+                slider.update()
+                on_slider_change(None)
+        
+        def increment(e):
+            if slider.value < max_val:
+                slider.value = min(max_val, slider.value + step)
+                slider.update()
+                on_slider_change(None)
+        
+        btn_minus = ft.IconButton(
+            icon=ft.Icons.CHEVRON_LEFT,
+            on_click=decrement,
+            disabled=slider.disabled,
+            tooltip="-1 division"
+        )
+        btn_plus = ft.IconButton(
+            icon=ft.Icons.CHEVRON_RIGHT,
+            on_click=increment,
+            disabled=slider.disabled,
+            tooltip="+1 division"
+        )
+        
+        return btn_minus, btn_plus
+
     # 画像インポート用ファイルピッカー
     upload_folder = "storage/temp"
     os.makedirs(upload_folder, exist_ok=True)
@@ -295,6 +360,26 @@ def main(page: ft.Page):
                     slider_smooth.disabled = False
                     slider_edge.disabled = False
                     export_button.disabled = False
+
+                    # TextFieldも有効化
+                    satur_value_field.disabled = False
+                    level_value_field.disabled = False
+                    smooth_value_field.disabled = False
+                    edge_value_field.disabled = False
+
+                    # 増減ボタンも有効化
+                    if satur_minus and satur_plus:
+                        satur_minus.disabled = False
+                        satur_plus.disabled = False
+                    if level_minus and level_plus:
+                        level_minus.disabled = False
+                        level_plus.disabled = False
+                    if smooth_minus and smooth_plus:
+                        smooth_minus.disabled = False
+                        smooth_plus.disabled = False
+                    if edge_minus and edge_plus:
+                        edge_minus.disabled = False
+                        edge_plus.disabled = False
 
                     # スライダー変更時はデバウンス適用
                     slider_satur.on_change = on_slider_change
@@ -353,7 +438,7 @@ def main(page: ft.Page):
         time.sleep(0.5)
         
         # ファイルタイプの検証
-        allowed_extensions = {'.jpg', '.jpeg', '.png', '.bmp'}
+        allowed_extensions = {'.jpg', '.jpeg', '.png', '.webp'}
         file_ext = os.path.splitext(file_name)[1].lower()
         if file_ext not in allowed_extensions:
             print(f"[ERROR] Invalid file type: {file_ext}")
@@ -382,6 +467,26 @@ def main(page: ft.Page):
             slider_edge.disabled = False
             export_button.disabled = False
 
+            # TextFieldも有効化
+            satur_value_field.disabled = False
+            level_value_field.disabled = False
+            smooth_value_field.disabled = False
+            edge_value_field.disabled = False
+
+            # 増減ボタンも有効化
+            if satur_minus and satur_plus:
+                satur_minus.disabled = False
+                satur_plus.disabled = False
+            if level_minus and level_plus:
+                level_minus.disabled = False
+                level_plus.disabled = False
+            if smooth_minus and smooth_plus:
+                smooth_minus.disabled = False
+                smooth_plus.disabled = False
+            if edge_minus and edge_plus:
+                edge_minus.disabled = False
+                edge_plus.disabled = False
+
             # スライダー変更時はデバウンス適用
             slider_satur.on_change = on_slider_change
             slider_level.on_change = on_slider_change
@@ -403,14 +508,23 @@ def main(page: ft.Page):
     file_picker_save = ft.FilePicker(
         on_result=on_save_dialog_result
     )
+    def on_import_click(e):
+        print(f"[DEBUG] Import button clicked")
+        try:
+            file_picker_open.pick_files(
+                file_type=ft.FilePickerFileType.CUSTOM,
+                allowed_extensions=["jpg", "jpeg", "png", "webp"],
+                allow_multiple=False
+            )
+            print(f"[DEBUG] pick_files called")
+        except Exception as ex:
+            print(f"[ERROR] Failed to open file picker: {ex}")
+            traceback.print_exc()
+    
     import_button = ft.ElevatedButton(
         text="Import",
         icon=ft.Icons.UPLOAD_FILE,
-        on_click=lambda _: file_picker_open.pick_files(
-            file_type=ft.FilePickerFileType.CUSTOM,
-            allowed_extensions=["jpg", "jpeg", "png", "bmp", "webp"],
-            allow_multiple=False
-        )
+        on_click=on_import_click
     )
 
     # ---- テンプレートボタンの実装 ----
@@ -429,52 +543,78 @@ def main(page: ft.Page):
         # スライダー値を変更したので、すぐに更新処理を走らせる
         update_image_preview()
 
-    # テンプレートボタンのレイアウト
+    # ---- レイアウト構築 ----
+    # 増減ボタンの作成
+    satur_minus, satur_plus = create_slider_controls(slider_satur, 0.0, 3.0, 30, 0.1)
+    level_minus, level_plus = create_slider_controls(slider_level, 2, 20, 18, 1)
+    smooth_minus, smooth_plus = create_slider_controls(slider_smooth, 0, 1000, 1000, 1)
+    edge_minus, edge_plus = create_slider_controls(slider_edge, 0.0, 10.0, 1000, 0.01)
+    
+    # テンプレートボタン
     template_buttons = ft.Row(
         controls=[
-            ft.ElevatedButton("default",   on_click=lambda e: apply_template("default")),
-            ft.ElevatedButton("realistic", on_click=lambda e: apply_template("realistic")),
-            ft.ElevatedButton("anime",     on_click=lambda e: apply_template("anime_style")),
-            ft.ElevatedButton("monochro",  on_click=lambda e: apply_template("monochrome")),
+            ft.ElevatedButton("Default", on_click=lambda e: apply_template("default")),
+            ft.ElevatedButton("Realistic", on_click=lambda e: apply_template("realistic")),
+            ft.ElevatedButton("Anime", on_click=lambda e: apply_template("anime_style")),
+            ft.ElevatedButton("Monochrome", on_click=lambda e: apply_template("monochrome")),
         ],
-        alignment=ft.MainAxisAlignment.CENTER,
+        spacing=5,
+        wrap=True,
     )
 
-    # ---- レイアウト構築 ----
-    # 右側のパラメータパネル
-    param_panel = ft.Column(
+    # 右側のコントロールパネル
+    control_panel = ft.Column(
         controls=[
-            ft.Text("saturation: 彩度の倍率"),
-            ft.Row([slider_satur, satur_value_text]),
-            ft.Text("level: ポスタリゼーションの色レベル"),
-            ft.Row([slider_level, level_value_text]),
-            ft.Text("smooth_strength: 平滑化の強さ (0-200)"),
-            ft.Row([slider_smooth, smooth_value_text]),
-            ft.Text("edge_strength: エッジ保持の強さ (0.0-2.0)"),
-            ft.Row([slider_edge, edge_value_text]),
+            # パラメータセクション
+            ft.Text("Parameters", size=16, weight=ft.FontWeight.BOLD),
+            ft.Text("saturation: 彩度の倍率 (0.0-3.0)", size=12),
+            ft.Row([satur_minus, slider_satur, satur_plus, satur_value_field], expand=True),
+            ft.Text("level: ポスタリゼーションの色レベル (2-20)", size=12),
+            ft.Row([level_minus, slider_level, level_plus, level_value_field], expand=True),
+            ft.Text("smooth_strength: 平滑化の強さ (0-1000)", size=12),
+            ft.Row([smooth_minus, slider_smooth, smooth_plus, smooth_value_field], expand=True),
+            ft.Text("edge_strength: エッジ保持の強さ (0.0-10.0)", size=12),
+            ft.Row([edge_minus, slider_edge, edge_plus, edge_value_field], expand=True),
+            
+            ft.Divider(),
+            
+            # テンプレートセクション
+            ft.Text("Templates", size=16, weight=ft.FontWeight.BOLD),
+            template_buttons,
+            
+            ft.Divider(),
+            
+            # アクションボタンセクション
+            ft.Text("Actions", size=16, weight=ft.FontWeight.BOLD),
+            ft.Row(
+                controls=[
+                    import_button,
+                    export_button,
+                ],
+                spacing=5,
+            ),
         ],
         spacing=10,
+        scroll=ft.ScrollMode.AUTO,
     )
 
-    # 全体レイアウト（左:プレビュー, 右:スライダー）
-    top_area = ft.Row(
+    # レスポンシブレイアウト
+    main_content = ft.ResponsiveRow(
         controls=[
-            image_stack,
-            param_panel,
+            # 画像プレビューエリア
+            ft.Container(
+                content=image_stack,
+                col={"xs": 12, "sm": 12, "md": 8, "lg": 9},
+                padding=5,
+            ),
+            # 右側のコントロールパネル
+            ft.Container(
+                content=control_panel,
+                col={"xs": 12, "sm": 12, "md": 4, "lg": 3},
+                padding=5,
+            ),
         ],
-        alignment=ft.MainAxisAlignment.START,
-        vertical_alignment=ft.CrossAxisAlignment.START
-    )
-
-    # 下部のテンプレートボタン + Import ボタン
-    bottom_area = ft.Row(
-        controls=[
-            template_buttons,
-            import_button,
-            export_button,
-        ],
-        spacing=30,
-        alignment=ft.MainAxisAlignment.CENTER
+        vertical_alignment=ft.CrossAxisAlignment.START,
     )
 
     page.overlay.append(file_picker_open)
@@ -484,11 +624,11 @@ def main(page: ft.Page):
     page.add(
         ft.Column(
             controls=[
-                top_area,
-                # ft.Text("パラメータ テンプレート"),
-                bottom_area,
+                ft.Text("Postarization Filter", size=24, weight=ft.FontWeight.BOLD),
+                main_content,
             ],
-            spacing=20
+            spacing=15,
+            expand=True
         )
     )
 

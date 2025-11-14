@@ -5,7 +5,7 @@
 ## 機能
 
 - 画像のインポート（ローカルファイル選択）
-  - 対応形式: JPEG, PNG, BMP, WebP
+  - 対応形式: JPEG, PNG, WebP
 - リアルタイムプレビュー
 - 5種類のパラメータテンプレート（default, realistic, anime_style, monochrome, novel_game）
 - 4つの調整可能なパラメータ:
