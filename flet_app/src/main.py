@@ -572,36 +572,47 @@ def main(page: ft.Page):
     # 右側のコントロールパネル
     control_panel = ft.Column(
         controls=[
-            # パラメータセクション
-            ft.Text("Parameters", size=16, weight=ft.FontWeight.BOLD),
-            ft.Text("saturation: 彩度の倍率 (0.0-3.0)", size=12),
-            ft.Row([satur_minus, slider_satur, satur_plus, satur_value_field], expand=True),
-            ft.Text("level: ポスタリゼーションの色レベル (2-20)", size=12),
-            ft.Row([level_minus, slider_level, level_plus, level_value_field], expand=True),
-            ft.Text("smooth_strength: 平滑化の強さ (0-1000)", size=12),
-            ft.Row([smooth_minus, slider_smooth, smooth_plus, smooth_value_field], expand=True),
-            ft.Text("edge_strength: エッジ保持の強さ (0.0-10.0)", size=12),
-            ft.Row([edge_minus, slider_edge, edge_plus, edge_value_field], expand=True),
-            
-            ft.Divider(),
-            
-            # テンプレートセクション
-            ft.Text("Templates", size=16, weight=ft.FontWeight.BOLD),
-            template_buttons,
-            
-            ft.Divider(),
-            
-            # アクションボタンセクション
-            ft.Text("Actions", size=16, weight=ft.FontWeight.BOLD),
-            ft.Row(
+            # パラメータセクション（折りたたみ可能）
+            ft.ExpansionTile(
+                title=ft.Text("Parameters", size=16, weight=ft.FontWeight.BOLD),
+                initially_expanded=True,
+                controls_padding=ft.padding.only(left=10, right=10, bottom=10),
                 controls=[
-                    import_button,
-                    export_button,
+                    ft.Text("saturation: 彩度の倍率 (0.0-3.0)", size=12),
+                    ft.Row([satur_minus, slider_satur, satur_plus, satur_value_field], expand=True),
+                    ft.Text("level: ポスタリゼーションの色レベル (2-20)", size=12),
+                    ft.Row([level_minus, slider_level, level_plus, level_value_field], expand=True),
+                    ft.Text("smooth_strength: 平滑化の強さ (0-1000)", size=12),
+                    ft.Row([smooth_minus, slider_smooth, smooth_plus, smooth_value_field], expand=True),
+                    ft.Text("edge_strength: エッジ保持の強さ (0.0-10.0)", size=12),
+                    ft.Row([edge_minus, slider_edge, edge_plus, edge_value_field], expand=True),
                 ],
-                spacing=5,
+            ),
+            # テンプレートセクション（折りたたみ可能）
+            ft.ExpansionTile(
+                title=ft.Text("Templates", size=16, weight=ft.FontWeight.BOLD),
+                initially_expanded=True,
+                controls_padding=ft.padding.only(left=10, right=10, bottom=10),
+                controls=[
+                    template_buttons,
+                ],
+            ),
+            # アクションボタンセクション
+            ft.Container(
+                content=ft.Column([
+                    ft.Text("Actions", size=16, weight=ft.FontWeight.BOLD),
+                    ft.Row(
+                        controls=[
+                            import_button,
+                            export_button,
+                        ],
+                        spacing=5,
+                    ),
+                ]),
+                padding=ft.padding.only(top=10),
             ),
         ],
-        spacing=10,
+        spacing=0,
         scroll=ft.ScrollMode.AUTO,
     )
 
