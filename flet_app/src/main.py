@@ -63,7 +63,7 @@ def main(page: ft.Page):
     # page.window_maximized = True
     # page.window_full_screen = True
     page.title = "Postarization Filter"
-    page.scroll = "auto"
+    page.scroll = ft.ScrollMode.AUTO
     page.padding = 10
 
     # Web版の場合、起動時に古いファイルをクリーンアップ
@@ -236,9 +236,9 @@ def main(page: ft.Page):
         print(f"[DEBUG] Starting postarization...")
         current_image = postarization(
             original_image,
-            saturation=sat_val,
+            saturation=int(sat_val),
             level=lev_val,
-            smooth_strength=smt_val,
+            smooth_strength=int(smt_val),
             edge_strength=edg_val
         )
         print(f"[DEBUG] Postarization complete, image size: {current_image.size}")
@@ -406,7 +406,7 @@ def main(page: ft.Page):
                     )
                 file_picker_open.upload(upload_list)
 
-    def on_upload_complete(e: ft.FilePickerResultEvent):
+    def on_upload_complete(e: ft.FilePickerUploadEvent):
         nonlocal original_image, current_image
         print(f"[DEBUG] on_upload_complete called, e={e}")
         
@@ -508,15 +508,22 @@ def main(page: ft.Page):
     file_picker_save = ft.FilePicker(
         on_result=on_save_dialog_result
     )
+    
+    # ページにfile_pickerを追加（これが重要）
+    page.overlay.append(file_picker_open)
+    page.overlay.append(file_picker_save)
+    
     def on_import_click(e):
         print(f"[DEBUG] Import button clicked")
+        print(f"[DEBUG] page.web={page.web}")
+        print(f"[DEBUG] file_picker_open={file_picker_open}")
         try:
             file_picker_open.pick_files(
                 file_type=ft.FilePickerFileType.CUSTOM,
                 allowed_extensions=["jpg", "jpeg", "png", "webp"],
                 allow_multiple=False
             )
-            print(f"[DEBUG] pick_files called")
+            print(f"[DEBUG] pick_files called successfully")
         except Exception as ex:
             print(f"[ERROR] Failed to open file picker: {ex}")
             traceback.print_exc()
@@ -616,9 +623,6 @@ def main(page: ft.Page):
         ],
         vertical_alignment=ft.CrossAxisAlignment.START,
     )
-
-    page.overlay.append(file_picker_open)
-    page.overlay.append(file_picker_save)
 
     # ページに追加
     page.add(
