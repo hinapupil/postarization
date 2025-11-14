@@ -157,8 +157,8 @@ def main(page: ft.Page):
                     allowed_extensions=["png", "jpg", "jpeg", ".webp"]
                 )
             else:
-                # Web版: base64エンコードして直接ダウンロード
-                print(f"[DEBUG] Creating base64 download for web")
+                # Web版: 画像をbase64エンコードして新しいタブで表示（右クリック保存用）
+                print(f"[DEBUG] Creating image for web export")
                 
                 timestamp = int(time.time())
                 filename = f"filtered_image_{timestamp}.png"
@@ -169,30 +169,12 @@ def main(page: ft.Page):
                 buf.seek(0)
                 b64_data = base64.b64encode(buf.getvalue()).decode()
                 
-                # ダウンロード用のHTMLページを作成
-                download_html = f"""<!DOCTYPE html>
-                <html>
-                <head><title>Download</title></head>
-                <body>
-                <p>Downloading...</p>
-                <script>
-                window.onload = function() {{
-                    const link = document.createElement('a');
-                    link.download = '{filename}';
-                    link.href = 'data:image/png;base64,{b64_data}';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    setTimeout(function() {{ window.close(); }}, 100);
-                }};
-                </script>
-                </body>
-                </html>
-                """
-                
-                # HTMLページを新しいウィンドウで開く
-                page.launch_url(f"data:text/html;charset=utf-8,{urllib.parse.quote(download_html)}", web_window_name="_blank")
-                print(f"[DEBUG] Download initiated: {filename}")
+                # data URLとして画像を直接開く
+                data_url = f"data:image/png;base64,{b64_data}"
+                page.launch_url(data_url, web_window_name="_blank")
+                print(f"[DEBUG] Image opened in new tab")
+                print(f"[INFO] Right-click on the image and select 'Save image as...' to download")
+
 
         except Exception as ex:
             print(f"[ERROR] エクスポートに失敗しました: {ex}")
